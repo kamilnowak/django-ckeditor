@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 from io import BytesIO
 
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -64,3 +65,26 @@ def should_create_thumbnail(file_path):
         return False
     else:
         return utils.is_valid_image_extension(file_path)
+
+
+def resize_image(file_path):
+    image = Image.open(file_path)
+    file_format = image.format
+    if hasattr(settings, 'MAX_IMAGE_RESOLUTION'):
+        max_resolution = settings.MAX_IMAGE_RESOLUTION
+    else:
+        max_resolution = (image.width, image.height)
+    image.thumbnail(max_resolution, Image.ANTIALIAS)
+    thumbnail_io = BytesIO()
+    image.save(thumbnail_io, format=file_format, optimize=True, quality=70)
+
+    scaled_file = InMemoryUploadedFile(
+        thumbnail_io,
+        None,
+        file_path.name,
+        file_format,
+        len(thumbnail_io.getvalue()),
+        None)
+    scaled_file.seek(0)
+
+    return scaled_file

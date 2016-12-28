@@ -59,7 +59,8 @@ class ImageUploadView(generic.View):
                     window.parent.CKEDITOR.tools.callFunction({0}, '', 'Invalid file type.');
                     </script>""".format(ck_func_num))
 
-        saved_path = self._save_file(request, uploaded_file)
+        scaled_file = backend.resize_image(uploaded_file)
+        saved_path = self._save_file(request, scaled_file)
         self._create_thumbnail_if_needed(backend, saved_path)
         url = utils.get_media_url(saved_path)
 
